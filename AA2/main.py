@@ -25,7 +25,12 @@ async def main():
             'GA_PROPERTY_ID',
             'GA_CLIENT_ID',
             'GA_CLIENT_SECRET',
-            'GA_REFRESH_TOKEN'
+            'GA_REFRESH_TOKEN',
+            'EMAIL_PROVIDER',
+            'FROM_EMAIL',
+            'EMAIL_USERNAME',
+            'EMAIL_PASSWORD',
+            'GESPREKSEIGENAAR_EMAIL'
         ]
         
         missing_vars = [var for var in required_vars if not os.getenv(var)]

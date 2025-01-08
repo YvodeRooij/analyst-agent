@@ -1,6 +1,7 @@
 import logging
 from typing import Dict
 from src.models.report_models import ReportState
+from src.utils.email_sender import send_email
 
 logger = logging.getLogger(__name__)
 
@@ -61,7 +62,12 @@ Overall Metrics:
         # Update state with final report
         state["final_report"] = final_report
         
-        logger.info("Successfully compiled final report")
+        # Send email with report
+        logger.info("Sending report via email")
+        subject = "Google Analytics 4 Performance Report"
+        send_email(subject, final_report)
+        
+        logger.info("Successfully compiled and sent final report")
         return state
         
     except Exception as e:
