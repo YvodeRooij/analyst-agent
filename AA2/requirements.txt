@@ -26,5 +26,11 @@ langsmith>=0.0.30
 jupyter>=1.0.0
 notebook>=7.0.0
 
+# API and Deployment
+fastapi>=0.68.0
+uvicorn>=0.15.0
+python-dotenv>=0.19.0
+httpx>=0.23.0
+
 # Email and Formatting
 markdown2>=2.4.0  # For HTML email formatting

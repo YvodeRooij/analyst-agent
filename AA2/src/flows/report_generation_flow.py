@@ -1,4 +1,7 @@
 import logging
+from langsmith import Client
+from langchain.callbacks.tracers import LangChainTracer
+from langchain.callbacks.manager import CallbackManager
 from typing import Dict, List
 from typing import TypedDict, Sequence
 from langgraph.graph import StateGraph, START, END
@@ -14,6 +17,10 @@ from src.prompts.writing_prompts import section_writer_instructions, final_secti
 
 logger = logging.getLogger(__name__)
 
+# Initialize global tracer and callback manager
+tracer = LangChainTracer(project_name="ga4-analytics-report")
+callback_manager = CallbackManager([tracer])
+
 def analyze_ga_data(state: ReportState, config: Dict) -> ReportState:
     """Analyze GA4 data to identify key patterns and trends"""
     try:
@@ -23,10 +30,11 @@ def analyze_ga_data(state: ReportState, config: Dict) -> ReportState:
         ga_data = state.get("ga_data", {})
         llm_config = config.get("llm_config", {})
         
-        # Initialize LLM
+        # Initialize LLM with callback manager
         llm = ChatOpenAI(
             model="gpt-4",
-            temperature=llm_config.get("temperature", 0.7)
+            temperature=llm_config.get("temperature", 0.7),
+            callbacks=callback_manager.handlers
         )
         
         # Extract key metrics and dimensions
@@ -78,10 +86,11 @@ def generate_insights(state: ReportState, config: Dict) -> ReportState:
         analysis = state.get("analysis", "")
         llm_config = config.get("llm_config", {})
         
-        # Initialize LLM
+        # Initialize LLM with callback manager
         llm = ChatOpenAI(
             model="gpt-4",
-            temperature=llm_config.get("temperature", 0.7)
+            temperature=llm_config.get("temperature", 0.7),
+            callbacks=callback_manager.handlers
         )
         
         # Prepare insights prompt
