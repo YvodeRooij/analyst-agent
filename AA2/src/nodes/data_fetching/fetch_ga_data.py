@@ -42,12 +42,18 @@ async def fetch_ga_data(state: ReportState, config: Dict) -> ReportState:
         if not await ga_connector.validate_credentials():
             raise ValueError("Failed to validate GA4 credentials")
         
-        # Calculate date ranges for current and previous periods
+        # Calculate date ranges for weekly and monthly comparisons
         end_date = datetime.now()
-        start_date = end_date - timedelta(days=ga_config.get("default_days", 30))
-        prev_start_date = start_date - timedelta(days=ga_config.get("default_days", 30))
+        # Weekly ranges
+        start_date = end_date - timedelta(days=7)  # Last 7 days
+        prev_week_start = start_date - timedelta(days=7)  # Previous week
         
-        # Fetch current period data
+        # Monthly ranges
+        current_month_start = end_date.replace(day=1)
+        last_month_end = current_month_start - timedelta(days=1)
+        last_month_start = last_month_end.replace(day=1)
+        
+        # Fetch current week data
         current_data = await ga_connector.fetch_data(
             metrics=ga_config.get("metrics", []),
             dimensions=ga_config.get("dimensions", []),
@@ -56,35 +62,83 @@ async def fetch_ga_data(state: ReportState, config: Dict) -> ReportState:
             row_limit=ga_config.get("row_limit", 10000)
         )
         
-        # Fetch previous period data
-        previous_data = await ga_connector.fetch_data(
+        # Fetch previous week data
+        previous_week_data = await ga_connector.fetch_data(
             metrics=ga_config.get("metrics", []),
             dimensions=ga_config.get("dimensions", []),
-            start_date=prev_start_date,
+            start_date=prev_week_start,
             end_date=start_date,
             row_limit=ga_config.get("row_limit", 10000)
         )
         
-        # Calculate growth rates and trends
-        growth_metrics = {}
+        # Fetch current month data
+        current_month_data = await ga_connector.fetch_data(
+            metrics=ga_config.get("metrics", []),
+            dimensions=ga_config.get("dimensions", []),
+            start_date=current_month_start,
+            end_date=end_date,
+            row_limit=ga_config.get("row_limit", 10000)
+        )
+        
+        # Fetch previous month data
+        previous_month_data = await ga_connector.fetch_data(
+            metrics=ga_config.get("metrics", []),
+            dimensions=ga_config.get("dimensions", []),
+            start_date=last_month_start,
+            end_date=last_month_end,
+            row_limit=ga_config.get("row_limit", 10000)
+        )
+        
+        # Calculate weekly and monthly growth rates
+        growth_metrics = {
+            'weekly': {},
+            'monthly': {}
+        }
+        
         for metric in current_data.get('metric_headers', []):
             metric_name = metric.get('name')
-            current_value = float(current_data.get('totals', {}).get(metric_name, 0))
-            prev_value = float(previous_data.get('totals', {}).get(metric_name, 0))
             
-            if prev_value > 0:
-                growth_rate = ((current_value - prev_value) / prev_value) * 100
-                growth_metrics[metric_name] = {
-                    'current': current_value,
-                    'previous': prev_value,
-                    'growth_rate': round(growth_rate, 2)
+            # Weekly comparisons
+            current_week_value = float(current_data.get('totals', {}).get(metric_name, 0))
+            prev_week_value = float(previous_week_data.get('totals', {}).get(metric_name, 0))
+            
+            if prev_week_value > 0:
+                weekly_growth = ((current_week_value - prev_week_value) / prev_week_value) * 100
+                growth_metrics['weekly'][metric_name] = {
+                    'current': current_week_value,
+                    'previous': prev_week_value,
+                    'growth_rate': round(weekly_growth, 2)
+                }
+            
+            # Monthly comparisons
+            current_month_value = float(current_month_data.get('totals', {}).get(metric_name, 0))
+            prev_month_value = float(previous_month_data.get('totals', {}).get(metric_name, 0))
+            
+            if prev_month_value > 0:
+                monthly_growth = ((current_month_value - prev_month_value) / prev_month_value) * 100
+                growth_metrics['monthly'][metric_name] = {
+                    'current': current_month_value,
+                    'previous': prev_month_value,
+                    'growth_rate': round(monthly_growth, 2)
                 }
         
-        # Combine data
+        # Combine all data
         ga_data = {
-            **current_data,
-            'previous_period': previous_data,
-            'growth_metrics': growth_metrics
+            'current_week': current_data,
+            'previous_week': previous_week_data,
+            'current_month': current_month_data,
+            'previous_month': previous_month_data,
+            'growth_metrics': growth_metrics,
+            'time_ranges': {
+                'weekly': {
+                    'current': {'start': start_date.date(), 'end': end_date.date()},
+                    'previous': {'start': prev_week_start.date(), 'end': start_date.date()}
+                },
+                'monthly': {
+                    'current': {'start': current_month_start.date(), 'end': end_date.date()},
+                    'previous': {'start': last_month_start.date(), 'end': last_month_end.date()}
+                }
+            }
         }
         
         logger.info(

@@ -37,19 +37,24 @@ def analyze_ga_data(state: ReportState, config: Dict) -> ReportState:
             callbacks=callback_manager.handlers
         )
         
-        # Extract key metrics and dimensions
-        metric_headers = ga_data.get('metric_headers', [])
-        dimension_headers = ga_data.get('dimension_headers', [])
-        totals = ga_data.get('totals', {})
+        # Extract weekly and monthly metrics
+        weekly_metrics = ga_data.get('growth_metrics', {}).get('weekly', {})
+        monthly_metrics = ga_data.get('growth_metrics', {}).get('monthly', {})
+        time_ranges = ga_data.get('time_ranges', {})
         
-        # Get top 5 rows for summary
-        top_rows = ga_data.get('rows', [])[:5]
+        # Get current week data for detailed analysis
+        current_week_data = ga_data.get('current_week', {})
+        metric_headers = current_week_data.get('metric_headers', [])
+        dimension_headers = current_week_data.get('dimension_headers', [])
         
-        # Prepare analysis prompt
-        analysis_prompt = f"""Analyze the following Google Analytics 4 data summary and provide key findings:
+        # Prepare comparative analysis prompt
+        analysis_prompt = f"""Analyze the following Google Analytics 4 data with week-over-week and month-over-month comparisons:
 
-Metrics Overview:
-{totals}
+Weekly Comparison ({time_ranges.get('weekly', {}).get('current', {}).get('start')} to {time_ranges.get('weekly', {}).get('current', {}).get('end')}):
+{weekly_metrics}
+
+Monthly Comparison ({time_ranges.get('monthly', {}).get('current', {}).get('start')} to {time_ranges.get('monthly', {}).get('current', {}).get('end')}):
+{monthly_metrics}
 
 Available Metrics:
 {[header.get('name') for header in metric_headers]}
@@ -57,14 +62,12 @@ Available Metrics:
 Available Dimensions:
 {dimension_headers}
 
-Sample Data (Top 5 Rows):
-{top_rows}
-
 Focus on:
-1. Overall performance metrics and trends
-2. Key user behavior patterns
-3. Most significant patterns in the data
-4. Areas for improvement
+1. Week-over-week performance changes and trends
+2. Month-over-month growth patterns
+3. Key metrics showing significant changes
+4. Areas of improvement or concern
+5. Seasonal patterns or anomalies
 """
         
         # Generate analysis

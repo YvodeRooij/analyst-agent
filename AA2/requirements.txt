@@ -34,3 +34,6 @@ httpx>=0.23.0
 
 # Email and Formatting
 markdown2>=2.4.0  # For HTML email formatting
+
+# Scheduling
+APScheduler>=3.10.1  # For scheduled report generation
