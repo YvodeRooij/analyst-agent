@@ -42,18 +42,50 @@ async def fetch_ga_data(state: ReportState, config: Dict) -> ReportState:
         if not await ga_connector.validate_credentials():
             raise ValueError("Failed to validate GA4 credentials")
         
-        # Calculate date range
+        # Calculate date ranges for current and previous periods
         end_date = datetime.now()
         start_date = end_date - timedelta(days=ga_config.get("default_days", 30))
+        prev_start_date = start_date - timedelta(days=ga_config.get("default_days", 30))
         
-        # Fetch GA data
-        ga_data = await ga_connector.fetch_data(
+        # Fetch current period data
+        current_data = await ga_connector.fetch_data(
             metrics=ga_config.get("metrics", []),
             dimensions=ga_config.get("dimensions", []),
             start_date=start_date,
             end_date=end_date,
             row_limit=ga_config.get("row_limit", 10000)
         )
+        
+        # Fetch previous period data
+        previous_data = await ga_connector.fetch_data(
+            metrics=ga_config.get("metrics", []),
+            dimensions=ga_config.get("dimensions", []),
+            start_date=prev_start_date,
+            end_date=start_date,
+            row_limit=ga_config.get("row_limit", 10000)
+        )
+        
+        # Calculate growth rates and trends
+        growth_metrics = {}
+        for metric in current_data.get('metric_headers', []):
+            metric_name = metric.get('name')
+            current_value = float(current_data.get('totals', {}).get(metric_name, 0))
+            prev_value = float(previous_data.get('totals', {}).get(metric_name, 0))
+            
+            if prev_value > 0:
+                growth_rate = ((current_value - prev_value) / prev_value) * 100
+                growth_metrics[metric_name] = {
+                    'current': current_value,
+                    'previous': prev_value,
+                    'growth_rate': round(growth_rate, 2)
+                }
+        
+        # Combine data
+        ga_data = {
+            **current_data,
+            'previous_period': previous_data,
+            'growth_metrics': growth_metrics
+        }
         
         logger.info(
             f"Successfully fetched GA data:\n"

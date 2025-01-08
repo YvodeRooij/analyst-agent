@@ -37,24 +37,43 @@ def write_section(state: Dict, config: Dict) -> Dict:
             
         # Process each section
         for section in research_sections:
-            # Extract key metrics and dimensions
+            # Extract metrics, dimensions, and growth data
             metric_headers = [h.get('name') for h in ga_data.get('metric_headers', [])]
             dimension_headers = ga_data.get('dimension_headers', [])
             totals = ga_data.get('totals', {})
+            growth_metrics = ga_data.get('growth_metrics', {})
             
-            # Get relevant rows based on section type
+            # Get relevant rows and prepare growth insights
             section_lower = section.name.lower()
-            rows = ga_data.get('rows', [])[:10]  # Get top 10 rows for context
+            rows = ga_data.get('rows', [])[:10]
             
-            # Prepare section-specific metrics
+            # Format growth metrics with clear comparisons
+            growth_insights = []
+            for metric in metric_headers:
+                if metric in growth_metrics:
+                    growth_data = growth_metrics[metric]
+                    current_val = growth_data['current']
+                    growth_rate = growth_data['growth_rate']
+                    
+                    # Format metric name for display
+                    metric_display = metric.replace('total', '').replace('average', 'avg')
+                    
+                    # Create growth insight with MoM comparison
+                    if abs(growth_rate) > 1:  # Only show significant changes
+                        direction = "increase" if growth_rate > 0 else "decrease"
+                        insight = f"{metric_display}: {current_val:.1f} ({abs(growth_rate):.1f}% {direction} MoM)"
+                        growth_insights.append(insight)
+            
+            # Prepare section-specific metrics with growth data
             section_metrics = {
                 'totals': totals,
                 'relevant_rows': rows,
                 'key_metrics': [m for m in metric_headers if _is_relevant_metric(m, section_lower)],
-                'key_dimensions': [d for d in dimension_headers if _is_relevant_dimension(d, section_lower)]
+                'key_dimensions': [d for d in dimension_headers if _is_relevant_dimension(d, section_lower)],
+                'growth_insights': growth_insights
             }
             
-            # Prepare writing prompt
+            # Prepare writing prompt with growth focus
             writing_prompt = f"""Write a detailed {section.name} section for the GA4 analytics report.
 
 Section Requirements:
@@ -62,6 +81,9 @@ Section Requirements:
 
 Overall Analysis Context:
 {analysis}
+
+Key Growth Insights:
+{chr(10).join(growth_insights)}
 
 Key Insights:
 {insights}
