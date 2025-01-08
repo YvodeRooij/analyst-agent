@@ -1,0 +1,27 @@
+# Core Dependencies
+langchain>=0.3.0  # Ensure you are using the latest stable version
+langgraph==0.2.61  # Latest version with updated tool_executor path
+pydantic>=2.0.0
+
+# Google Analytics
+google-analytics-data>=0.17.1
+google-auth-oauthlib>=1.0.0
+google-auth-httplib2>=0.1.0
+
+# LLM Providers
+langchain-openai>=0.1.0  # Update to the latest version
+langchain-anthropic>=0.1.0
+
+# Environment and Configuration
+python-dotenv>=1.0.0
+pyyaml>=6.0.1
+
+# Type Hints
+typing-extensions>=4.5.0
+
+# Logging and Monitoring
+langsmith>=0.0.30
+
+# Development Tools
+jupyter>=1.0.0
+notebook>=7.0.0
