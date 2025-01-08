@@ -32,30 +32,30 @@ def compile_final_report(state: ReportState, config: Dict) -> ReportState:
             state["final_report"] = "No sections available to compile report."
             return state
             
-        # Format final report
+        # Format final report in markdown
         final_report = f"""
-GOOGLE ANALYTICS 4 PERFORMANCE REPORT
-===================================
+# GOOGLE ANALYTICS 4 PERFORMANCE REPORT
 
-OVERVIEW
---------
-Property ID: {ga_data.get('metadata', {}).get('property_id', 'Not specified')}
-Total Rows Analyzed: {ga_data.get('row_count', 0)}
+## OVERVIEW
 
-Overall Metrics:
+**Property ID:** {ga_data.get('metadata', {}).get('property_id', 'Not specified')}  
+**Total Rows Analyzed:** {ga_data.get('row_count', 0)}
+
+<div class="metrics">
+
+### Overall Metrics
 {totals}
+
+</div>
 
 """
         
         # Add each section's content in order
         for section in sections:
             if section.content:
-                final_report += f"""
-{section.name.upper()}
-{'=' * len(section.name)}
-{section.content}
-
-"""
+                # Remove any existing section numbering if present
+                section_name = section.name.strip('0123456789. ')
+                final_report += f"\n{section.content}\n"
                 
         logger.info(f"Successfully compiled report with {len(sections)} sections")
         

@@ -25,3 +25,6 @@ langsmith>=0.0.30
 # Development Tools
 jupyter>=1.0.0
 notebook>=7.0.0
+
+# Email and Formatting
+markdown2>=2.4.0  # For HTML email formatting
