@@ -1,0 +1,29 @@
+name: ga4-analytics-report
+runtime: docker
+entrypoint: api:app
+environment_variables:
+  - LANGCHAIN_TRACING_V2
+  - LANGCHAIN_API_KEY
+  - LANGCHAIN_ENDPOINT
+  - LANGCHAIN_PROJECT
+  - GA_PROPERTY_ID
+  - GA_CLIENT_ID
+  - GA_CLIENT_SECRET
+  - GA_REFRESH_TOKEN
+  - OPENAI_API_KEY
+  - ANTHROPIC_API_KEY
+  - EMAIL_PROVIDER
+  - FROM_EMAIL
+  - EMAIL_USERNAME
+  - EMAIL_PASSWORD
+  - GESPREKSEIGENAAR_EMAIL
+resources:
+  cpu: 1
+  memory: 2Gi
+  min_replicas: 1
+  max_replicas: 3
+port: 8000
+health_check:
+  path: /health
+  initial_delay_seconds: 10
+  period_seconds: 30

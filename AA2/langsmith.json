@@ -1,0 +1,33 @@
+{
+  "project_name": "ga4-analytics-report",
+  "project_id": "ga4-analytics-report",
+  "runtime": {
+    "type": "cloud",
+    "tier": "developer",
+    "env_vars": [
+      "LANGCHAIN_API_KEY",
+      "LANGCHAIN_TRACING_V2",
+      "LANGCHAIN_ENDPOINT",
+      "LANGCHAIN_PROJECT",
+      "GA_PROPERTY_ID",
+      "GA_CLIENT_ID",
+      "GA_CLIENT_SECRET",
+      "GA_REFRESH_TOKEN",
+      "OPENAI_API_KEY",
+      "ANTHROPIC_API_KEY",
+      "EMAIL_PROVIDER",
+      "FROM_EMAIL",
+      "EMAIL_USERNAME",
+      "EMAIL_PASSWORD",
+      "GESPREKSEIGENAAR_EMAIL"
+    ]
+  },
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "api": {
+    "mount_point": "/",
+    "openapi_url": "/openapi.json",
+    "server_app": "api:app"
+  }
+}
